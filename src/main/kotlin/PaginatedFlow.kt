@@ -42,12 +42,12 @@ private class PaginatedFlowImpl<T>(
     private val block: suspend PaginatedFlowCollector<T>.() -> Unit,
 ) : AbstractFlow<T>(), PaginatedFlow<T> {
 
-    private val loadMoreChannel = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val loadMoreFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     override suspend fun collectSafely(collector: FlowCollector<T>) {
         val paginatedCollector = object : PaginatedFlowCollector<T> {
             override suspend fun onLoadMore(action: suspend () -> Unit) {
-                loadMoreChannel.collect { action() }
+                loadMoreFlow.collect { action() }
             }
 
             override suspend fun emit(value: T) {
@@ -58,6 +58,6 @@ private class PaginatedFlowImpl<T>(
     }
 
     override fun loadMore() {
-        loadMoreChannel.tryEmit(Unit)
+        loadMoreFlow.tryEmit(Unit)
     }
 }
